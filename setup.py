@@ -5,7 +5,7 @@ setup(
     version='0.1.0'
     author='Hans Engel'
     author_email='engel@engel.uk.to'
-    packages=['gaeunit_cli']
+    py_modules=['gaeunit_cli']
     scripts=['bin/gaeunit']
     url='https://github.com/hans/gaeunit-cli'
     license='LICENSE.md'
