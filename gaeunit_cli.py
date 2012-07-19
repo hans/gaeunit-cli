@@ -71,13 +71,16 @@ def run_tests(url, tests):
     for test in tests:
         # Trigger the test run and receive results
         u = urllib2.urlopen('%s/run?name=%s' % (url, test))
-        result = json.loads(u.read())
+        data = json.loads(u.read())
 
         # TODO: reproduce error properly
-        if len(result['failures']) > 0:
+        if len(data['failures']) > 0:
           exc = (AssertionError, 'Hi', None)
           result.addFailure(dummy, exc)
+        else:
+          result.addSuccess(dummy)
 
+    print ''
     print_separator()
     result.printErrors()
 
