@@ -75,15 +75,19 @@ def run_tests(url, tests):
 
         # TODO: reproduce error properly
         if len(data['failures']) > 0:
-          exc = (AssertionError, 'Hi', None)
-          result.addFailure(dummy, exc)
+            # Update the dummy test's description to describe the current test
+            failure = data['failures'][0]
+
+            dummy.testName = test
+            dummy.shortDescription_ = failure['desc']
+
+            # Fake an exception tuple
+            # TODO: spoof a traceback based on string contained in failure
+            #   response
+            exc = (AssertionError, failure['desc'], None)
+
+            result.addFailure(dummy, exc)
         else:
-          result.addSuccess(dummy)
+            result.addSuccess(dummy)
 
-    print ''
-    print_separator()
     result.printErrors()
-
-
-def print_separator(char='-'):
-    print char * 70

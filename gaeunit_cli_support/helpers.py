@@ -5,8 +5,15 @@ class DummyTest:
     # @see unittest.TestCase.failureException
     failureException = AttributeError
 
+    testName = ''
+    shortDescription_ = ''
+
     def shortDescription(self):
-        return ''
+        return self.shortDescription_
+
+    def __repr__(self):
+        return self.testName
+
 
 class DummyStdout:
     """unittest tries to call sys.stdout.writeln(), which does not exist (!).
