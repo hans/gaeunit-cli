@@ -1,7 +1,10 @@
 import json
 import optparse
 import sys
+import unittest.runner
 import urllib2
+
+from gaeunit_cli_support.helpers import DummyTest
 
 def main():
     parser = optparse.OptionParser(usage='%prog -u URL [options]',
@@ -17,8 +20,11 @@ def main():
         parser.print_usage()
         exit()
 
+    # Get a list of test call names from the server
     tests = get_tests(options.url)
-    print str(tests)
+
+    # Go!
+    run_tests(options.url, tests)
 
 
 # Get a list of test names given the GAEUnit access point
@@ -47,3 +53,23 @@ def get_tests(url):
           tests.append("%s.%s.%s" % (module, klass, method))
 
     return tests
+
+
+# Run a list of tests
+def run_tests(url, tests):
+    # Use a standard unittest output mechanism
+    results = unittest.runner.TextTestResult(stream=sys.stderr,
+                                             descriptions=True,
+                                             verbosity=1)
+
+    # TODO: mod GAEUnit to run multiple tests w/ single request
+    # see unittest.loadTestsFromNames
+    for test in tests:
+        # Trigger the test run and receive results
+        u = urllib2.urlopen('%s/run?name=%s' % (url, test))
+        result = json.loads(u.read())
+
+        # TODO: reproduce error properly
+        if len(result['failures']) > 0:
+          exc = (AssertionError, 'Hi', None)
+          results.addFailure(test, exc)
