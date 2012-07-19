@@ -58,9 +58,13 @@ def get_tests(url):
 # Run a list of tests
 def run_tests(url, tests):
     # Use a standard unittest output mechanism
-    results = unittest.runner.TextTestResult(stream=sys.stderr,
-                                             descriptions=True,
-                                             verbosity=1)
+    result = unittest.runner.TextTestResult(stream=sys.stdout,
+                                            descriptions=True,
+                                            verbosity=1)
+
+    # Pass this dummy object (standing in for unittest.TestCase) to the test
+    # result object.
+    dummy = DummyTest()
 
     # TODO: mod GAEUnit to run multiple tests w/ single request
     # see unittest.loadTestsFromNames
@@ -72,4 +76,11 @@ def run_tests(url, tests):
         # TODO: reproduce error properly
         if len(result['failures']) > 0:
           exc = (AssertionError, 'Hi', None)
-          results.addFailure(test, exc)
+          result.addFailure(dummy, exc)
+
+    print_separator()
+    result.printErrors()
+
+
+def print_separator(char='-'):
+    print char * 70
