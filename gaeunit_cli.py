@@ -4,7 +4,7 @@ import sys
 import unittest.runner
 import urllib2
 
-from gaeunit_cli_support.helpers import DummyTest
+from gaeunit_cli_support.helpers import DummyTest, DummyStdout
 
 def main():
     parser = optparse.OptionParser(usage='%prog -u URL [options]',
@@ -58,7 +58,7 @@ def get_tests(url):
 # Run a list of tests
 def run_tests(url, tests):
     # Use a standard unittest output mechanism
-    result = unittest.runner.TextTestResult(stream=sys.stdout,
+    result = unittest.runner.TextTestResult(stream=DummyStdout(),
                                             descriptions=True,
                                             verbosity=1)
 
