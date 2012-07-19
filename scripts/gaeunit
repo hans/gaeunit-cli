@@ -1,0 +1,6 @@
+#!/usr/bin/env python
+
+import gaeunit
+
+if __name__ == '__main__':
+    gaeunit.main()
