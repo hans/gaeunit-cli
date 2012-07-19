@@ -20,7 +20,7 @@ class DummyStdout:
     Get around this!"""
 
     def writeln(self, data=''):
-        sys.stdout.write("\n%s" % data)
+        sys.stdout.write("%s\n" % data)
 
     def __getattr__(self, name):
         """Forward any other methods to sys.stdout."""
