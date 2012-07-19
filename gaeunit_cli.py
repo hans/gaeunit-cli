@@ -1,5 +1,6 @@
 import json
 import optparse
+import re
 import sys
 import unittest.runner
 import urllib2
@@ -81,10 +82,15 @@ def run_tests(url, tests):
             dummy.testName = test
             dummy.shortDescription_ = failure['desc']
 
+            # Fake exception description. Grab from the penultimate line of the
+            # traceback string, minus the exception label at start.
+            desc = failure['detail'].split("\n")[-2]
+            desc = re.compile(r"^\w+: (.*)$").match(desc).group(1) or desc
+
             # Fake an exception tuple
             # TODO: spoof a traceback based on string contained in failure
             #   response
-            exc = (AssertionError, failure['desc'], None)
+            exc = (AssertionError, desc, None)
 
             result.addFailure(dummy, exc)
         else:
