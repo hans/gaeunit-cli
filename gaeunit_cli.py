@@ -2,6 +2,7 @@ import json
 import optparse
 import re
 import sys
+import time
 import unittest.runner
 import urllib2
 
@@ -28,8 +29,9 @@ def main():
     run_tests(options.url, tests)
 
 
-# Get a list of test names given the GAEUnit access point
 def get_tests(url):
+    """Get a list of test names given the GAEUnit access point"""
+
     u = urllib2.urlopen('%s/list' % url)
     dict = json.loads(u.read())
 
@@ -56,16 +58,23 @@ def get_tests(url):
     return tests
 
 
-# Run a list of tests
-def run_tests(url, tests):
+def run_tests(url, tests, stream=None):
+    """Run a list of tests"""
+
+    if not stream:
+        stream = DummyStdout()
+
     # Use a standard unittest output mechanism
-    result = unittest.runner.TextTestResult(stream=DummyStdout(),
+    result = unittest.runner.TextTestResult(stream=stream,
                                             descriptions=True,
                                             verbosity=1)
 
     # Pass this dummy object (standing in for unittest.TestCase) to the test
     # result object.
     dummy = DummyTest()
+
+    # Start timing
+    start_time = time.time()
 
     # TODO: mod GAEUnit to run multiple tests w/ single request
     # see unittest.loadTestsFromNames
@@ -97,3 +106,39 @@ def run_tests(url, tests):
             result.addSuccess(dummy)
 
     result.printErrors()
+
+    totalTime = time.time() - start_time
+    stream.writeln("Ran %d test%s in %.3fs\n" %
+                   (len(tests), len(tests) != 1 and "s" or "", totalTime))
+
+    expectedFails = unexpectedSuccesses = skipped = 0
+    try:
+        results = map(len, (result.expectedFailures,
+                          result.unexpectedSuccesses,
+                          result.skipped))
+    except AttributeError:
+        pass
+    else:
+        expectedFails, unexpectedSuccesses, skipped = results
+
+    infos = []
+    if not result.wasSuccessful():
+        stream.write("FAILED")
+        failed, errored = map(len, (result.failures, result.errors))
+        if failed:
+            infos.append("failures=%d" % failed)
+        if errored:
+            infos.append("errors=%d" % errored)
+    else:
+        stream.write("OK")
+    if skipped:
+        infos.append("skipped=%d" % skipped)
+    if expectedFails:
+        infos.append("expected failures=%d" % expectedFails)
+    if unexpectedSuccesses:
+        infos.append("unexpected successes=%d" % unexpectedSuccesses)
+
+    if infos:
+        stream.writeln(" (%s)" % (", ".join(infos),))
+    else:
+        stream.writeln()
