@@ -139,3 +139,7 @@ def run_tests(url, tests, stream=None):
         stream.writeln(" (%s)" % (", ".join(infos),))
     else:
         stream.writeln()
+
+
+if __name__ == '__main__':
+    main()
