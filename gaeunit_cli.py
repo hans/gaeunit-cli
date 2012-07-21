@@ -10,20 +10,60 @@ from gaeunit_cli_support.helpers import DummyTest, DummyStdout
 
 def main():
     parser = optparse.OptionParser(usage='%prog -u URL [options]',
-                                   version='%prog 0.1.0')
-    parser.add_option('-u', '--url', help='URL to access GAEUnit', dest='url')
+                                   version='%prog 0.1.0',
+                                   add_help_option=False)
+
+    parser.add_option('--help', action='store_true', default=False, dest='help')
+
+    parser.add_option('-h', '--host',
+                      help='The host (port included) which is running the GAE'
+                           'instance',
+                      default='http://localhost:8080', dest='host')
+
+    parser.add_option('-p', '--path', help="Relative path of GAEUnit endpoint",
+                      default=get_default_path(), dest='path')
 
     (options, args) = parser.parse_args(sys.argv)
 
-    # TODO: allow for setting URL in an .rc file
-    # TODO: validate URL
-    url = options.url or 'http://localhost:8080/test'
+    if options.help:
+        print parser.format_help().strip()
+        exit()
+
+    url = get_url(options)
 
     # Get a list of test call names from the server
-    tests = get_tests(options.url)
+    tests = get_tests(url)
 
     # Go!
-    run_tests(options.url, tests)
+    run_tests(url, tests)
+
+
+def get_default_path():
+    """Determine the default GAEUnit path option."""
+
+    # Try to read from app.yaml; if we can't find it, return the GAEUnit
+    # default '/test'
+    try:
+        gae_config_file = open('app.yaml', 'r')
+    except IOError as e:
+        return '/test'
+
+
+def get_url(options):
+    """Determine the GAEUnit URL given optparse's output."""
+
+    # TODO: validate URL
+    if options.host.startswith('http'):
+        host = options.host
+    else:
+        host = 'http://%s' % options.host
+
+    if options.path.startswith('/'):
+        path = options.path
+    else:
+        path = '/%s' % options.path
+
+    return host + path
 
 
 def get_tests(url):
