@@ -5,6 +5,7 @@ import sys
 import time
 import unittest.runner
 import urllib2
+import yaml
 
 from gaeunit_cli_support.helpers import DummyTest, DummyStdout
 
@@ -44,9 +45,17 @@ def get_default_path():
     # Try to read from app.yaml; if we can't find it, return the GAEUnit
     # default '/test'
     try:
-        gae_config_file = open('app.yaml', 'r')
-    except IOError as e:
-        return '/test'
+        gae_config_file = open('/Users/jon/Projects/stremorshort/app.yaml', 'r')
+    except IOError as e: pass
+    else:
+        loaded = yaml.load(gae_config_file.read())
+        gae_config_file.close()
+
+        for handler in loaded['handlers']:
+            if 'script' in handler and handler['script'].startswith('gaeunit'):
+                return re.sub(r'[^\w/]', '', handler['url'])
+
+    return '/test'
 
 
 def get_url(options):
