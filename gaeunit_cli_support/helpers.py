@@ -1,4 +1,4 @@
-import collections
+import re
 import sys
 
 class DummyTest:
@@ -29,3 +29,30 @@ class DummyStdout:
             getattr(sys.stdout, name)(*args, **kwargs)
 
         return method_missing
+
+
+class DummyTraceback:
+    class DummyTracebackFrame:
+        f_globals = ['__unittest']
+
+    tb_frame = DummyTracebackFrame()
+    tb_next = None
+
+    def __init__(self, traceback_str):
+        self.traceback_str = traceback_str
+
+    def format_exception(self, type, value, tb, limit=None):
+        return self.traceback_str
+
+
+def get_error_message(traceback_str):
+    # Grab from the penultimate line of the
+    # traceback string, minus the exception label at start.
+    try:
+        desc = traceback_str.split("\n")[-2]
+    except IndexError, e:
+        return ''
+    else:
+        desc = re.compile(r"^\w+: (.*)$").match(desc).group(1) or desc
+
+        return traceback_str

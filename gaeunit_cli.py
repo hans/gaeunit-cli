@@ -7,7 +7,7 @@ import unittest.runner
 import urllib2
 import yaml
 
-from gaeunit_cli_support.helpers import DummyTest, DummyStdout
+import gaeunit_cli_support.helpers as helpers
 
 def main():
     parser = optparse.OptionParser(usage='%prog -u URL [options]',
@@ -108,7 +108,7 @@ def run_tests(url, tests, stream=None):
     """Run a list of tests"""
 
     if not stream:
-        stream = DummyStdout()
+        stream = helpers.DummyStdout()
 
     # Use a standard unittest output mechanism
     result = unittest.runner.TextTestResult(stream=stream,
@@ -117,7 +117,7 @@ def run_tests(url, tests, stream=None):
 
     # Pass this dummy object (standing in for unittest.TestCase) to the test
     # result object.
-    dummy = DummyTest()
+    dummy = helpers.DummyTest()
 
     # Start timing
     start_time = time.time()
@@ -129,25 +129,30 @@ def run_tests(url, tests, stream=None):
         u = urllib2.urlopen('%s/run?name=%s' % (url, test))
         data = json.loads(u.read())
 
-        # TODO: reproduce error properly
-        if len(data['failures']) > 0:
-            # Update the dummy test's description to describe the current test
-            failure = data['failures'][0]
+        # Update the dummy test's description to describe the current test
+        dummy.testName = test
 
-            dummy.testName = test
-            dummy.shortDescription_ = failure['desc']
+        if len(data['failures']) > 0 or len(data['errors']) > 0:
+            if len(data['failures']) > 0:
+                # Use the method's docstring as the test description
+                failure = data['failures'][0]
+                dummy.shortDescription_ = failure['desc']
 
-            # Fake exception description. Grab from the penultimate line of the
-            # traceback string, minus the exception label at start.
-            desc = failure['detail'].split("\n")[-2]
-            desc = re.compile(r"^\w+: (.*)$").match(desc).group(1) or desc
+                # Fake an exception tuple
+                desc = helpers.get_error_message(failure['desc'])
+                exc = (AssertionError, desc, None)
 
-            # Fake an exception tuple
-            # TODO: spoof a traceback based on string contained in failure
-            #   response
-            exc = (AssertionError, desc, None)
+                result.addFailure(dummy, exc)
+            elif len(data['errors']) > 0:
+                error = data['errors'][0]
+                tb = helpers.DummyTraceback(error['detail'])
 
-            result.addFailure(dummy, exc)
+                # Fake an exception tuple
+                # TODO: get the exception class right
+                desc = helpers.get_error_message(error['detail'])
+                exc = (AssertionError, desc, tb)
+
+                result.addError(dummy, exc)
         else:
             result.addSuccess(dummy)
 
