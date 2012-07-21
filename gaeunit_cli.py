@@ -148,9 +148,8 @@ def run_tests(url, tests, stream=None):
                 tb = helpers.DummyTraceback(error['detail'])
 
                 # Fake an exception tuple
-                # TODO: get the exception class right
                 desc = helpers.get_error_message(error['detail'])
-                exc = (AssertionError, desc, tb)
+                exc = (helpers.GAEError, desc, tb)
 
                 result.addError(dummy, exc)
         else:

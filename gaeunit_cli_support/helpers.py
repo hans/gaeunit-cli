@@ -45,6 +45,9 @@ class DummyTraceback:
         return self.traceback_str
 
 
+class GAEError: pass
+
+
 def get_error_message(traceback_str):
     # Grab from the penultimate line of the
     # traceback string, minus the exception label at start.
