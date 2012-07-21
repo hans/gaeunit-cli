@@ -15,12 +15,9 @@ def main():
 
     (options, args) = parser.parse_args(sys.argv)
 
-    # Die if we aren't given the URL.
     # TODO: allow for setting URL in an .rc file
     # TODO: validate URL
-    if not options.url:
-        parser.print_usage()
-        exit()
+    url = options.url or 'http://localhost:8080/test'
 
     # Get a list of test call names from the server
     tests = get_tests(options.url)
@@ -46,7 +43,7 @@ def get_tests(url):
     #   }
     # }
     #
-    # We simply need a list of <module>.<class>.<method>.
+    # We simply need a list of <module>.<class>.<method> strings.
 
     tests = []
 
